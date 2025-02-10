@@ -64,26 +64,32 @@ fi
 
 # Start the receiver using ffmpeg
 echo "Listening for stream on $ip:$port..."
-echo "Displaying video on SDL"
+# echo "Displaying video on SDL"
 
 # If output-dir is specified, save frames as BMP with optional FPS limiting
 if [[ -n "$output_dir" ]]; then
     if [[ -n "$fps" ]]; then
         echo "Saving frames at $fps FPS to $output_dir"
-        ffmpeg -i udp://"$ip":"$port" \
-            -c:v rawvideo -pix_fmt yuv420p \
-            -f sdl "Receiver Display" \
+        ffmpeg -i udp://"$ip":"$port" -f nut - | ffplay -\
+            #-c:v rawvideo \
+	    #-pix_fmt yuv420p \
+            #-f sdl "Decoder" \
             -map 0:v:0 -c:v bmp -pix_fmt bgr24 -vf "fps=$fps" "$output_dir/frame_%04d.bmp"
     else
         echo "Saving frames to $output_dir without FPS limit"
-        ffmpeg -i udp://"$ip":"$port" \
-            -c:v rawvideo -pix_fmt yuv420p \
-            -f sdl "Receiver Display" \
+        ffmpeg -i udp://"$ip":"$port" -f nut - | ffplay -\
+            #-c:v rawvideo \
+	    #-pix_fmt yuv420p \
+            #-f sdl "Decoder" \
             -map 0:v:0 -c:v bmp -pix_fmt bgr24 "$output_dir/frame_%04d.bmp"
     fi
 else
     # Just display the video on SDL without saving frames
-    ffmpeg -i udp://"$ip":"$port" \
-        -c:v rawvideo -pix_fmt yuv420p \
-        -f sdl "Receiver Display"
+    #echo "Stream1 ... "
+    #echo udp://"$ip":"$port"
+    ffmpeg -i udp://"$ip":"$port" -f nut - | sudo ffplay -
+        #-c:v rawvideo \
+	#-pix_fmt yuv420p \
+        #-f sdl "Decoder"
 fi
+

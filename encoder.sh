@@ -53,12 +53,24 @@ while [[ "$#" -gt 0 ]]; do
     esac
 done
 
+sudo bash ./diplay_rtsp.sh &
+
 # Check if required arguments are provided
 if [[ -z "$input_file" || -z "$ip" || -z "$codec" ]]; then
     echo "Error: Missing required arguments."
     show_help
     exit 1
 fi
+
+#if [["$input_file" == rtsp://* ]]; then 
+#    echo "---- $input_file"
+#    input_args = "-i"+ $input_file
+#    echo "---- Input $input_args"
+#else 
+#    echo "---- $input_file"
+#    input_args = "-re -i $input_file"
+#    echo "---- Input $input_args"
+#fi
 
 # Remove output directory if it exists and output-dir is specified
 if [[ -n "$output_dir" && -d "$output_dir" ]]; then
@@ -83,28 +95,32 @@ if [[ -n "$output_dir" ]]; then
     fi
 fi
 
+#ffplay "$input_file" -window_title "Encoder"
+
 # Process based on codec
 case "$codec" in
     h264)
         echo "Using h264 codec"
+	#ffplay "$input_file" -window_title "Encoder"
         ffmpeg -re -i "$input_file" -vf "scale=$scale" \
-            -f sdl "Sender Display" \
-            -c:v libx264 -preset ultrafast -tune zerolatency -b:v "$bitrate" \
-            -keyint_min "$keyint" -g "$gop" -f mpegts udp://"$ip":"$port" \
-            $frame_save_args
+            -c:v libx264 -b:v "$bitrate" \
+            -keyint_min "$keyint" -g "$gop" -f mpegts udp://"$ip":"$port" 
+            #-f nut - | ffplay -
+	    #$frame_save_args
+	#ffplay "$input_file"
         ;;
     h265)
         echo "Using h265 codec"
-        ffmpeg -re -i "$input_file" -vf "scale=$scale" \
-            -f sdl "Sender Display" \
+	#ffplay "$input_file" -window_title "Encoder"
+	ffmpeg -re -i "$input_file" -vf "scale=$scale"  \
             -c:v libx265 -preset ultrafast -tune zerolatency -b:v "$bitrate" \
             -keyint_min "$keyint" -g "$gop" -f mpegts udp://"$ip":"$port" \
             $frame_save_args
         ;;
     vp9)
         echo "Using vp9 codec"
-        ffmpeg -re -i "$input_file" -vf "scale=$scale" \
-            -f sdl "Sender Display" \
+	ffmpeg -re -i "$input_file" -vf "scale=$scale" \
+            -f sdl "Encoder" \
             -c:v libvpx-vp9 -b:v "$bitrate" -g "$gop" -f webm udp://"$ip":"$port" \
             $frame_save_args
         ;;
@@ -113,3 +129,6 @@ case "$codec" in
         exit 1
         ;;
 esac
+
+# sudo bash ./diplay_rtsp.sh &
+
